@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
 import os
+import sys
 import json
+import logging
 from datetime import datetime
 
-
-
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 #############Load config.json and get input and output paths
 with open('config.json','r') as f:
@@ -14,13 +15,41 @@ with open('config.json','r') as f:
 input_folder_path = config['input_folder_path']
 output_folder_path = config['output_folder_path']
 
-
-
 #############Function for data ingestion
 def merge_multiple_dataframe():
-    #check for datasets, compile them together, and write to an output file
+    """
+        The function will read all the dataset and merge to the final datasets
+    """
 
-
-
+    logging.info("Start merge all datasets.")
+    df = pd.DataFrame(columns=['corporation', 'lastmonth_activity', 'lastyear_activity', 'number_of_employees', 'exited'])
+    list_sub_df = []
+    for file in os.listdir(input_folder_path):
+        # Get only the file end with .csv
+        if str(file).endswith(".csv"):
+            # Get the file path
+            file_path = os.path.join(input_folder_path, file)
+            list_sub_df.append(file_path)
+            df_sub = pd.read_csv(file_path)
+            df = df.append(df_sub)
+    logging.info("Merge all datasets finished")
+    
+    logging.info("Remove duplicate on merge dataset")
+    df.drop_duplicates(inplace=True)
+    df.reset_index(drop=1, inplace=True)
+    
+    logging.info("Saving the data ingestion")
+    df.to_csv(os.path.join(output_folder_path, 'finaldata.csv'), index=False)
+    
+    logging.info("Saving the metadata ingestion")
+    log_time = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+    with open(os.path.join(output_folder_path, 'ingestedfiles.txt'), "w") as file:
+        file.write("Ingestion time: {}\n".format(log_time))
+        file.write("List input file: {}\n".format(str(list_sub_df)))
+        file.write("Output file: {}\n".format(os.path.join(output_folder_path, 'finaldata.csv')))
+        file.write("Output file shape: {}\n".format(df.shape))
+        file.write("________________________________________________________________")
+        
 if __name__ == '__main__':
+    logging.info("Merge multiple datasets...")
     merge_multiple_dataframe()
