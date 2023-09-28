@@ -1,25 +1,50 @@
-from flask import Flask, session, jsonify, request
+from datetime import datetime
 import pandas as pd
-import numpy as np
 import pickle
 import os
-from sklearn import metrics
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import f1_score
 import json
+import logging
+import sys
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-
-
-#################Load config.json and get path variables
 with open('config.json','r') as f:
     config = json.load(f) 
 
-dataset_csv_path = os.path.join(config['output_folder_path']) 
-test_data_path = os.path.join(config['test_data_path']) 
+dataset_csv_path = config['output_folder_path']
+test_data_path = config['test_data_path']
+output_model_path = config['output_model_path']
 
-
-#################Function for model scoring
 def score_model():
-    #this function should take a trained model, load test data, and calculate an F1 score for the model relative to the test data
-    #it should write the result to the latestscore.txt file
-
+    """
+        Function calulates the F1 score for the trained model on the data test.
+        Output: Report of model score in latestscore.txt file.
+    """
+    try:
+        logging.info('Load the data test.')
+        df_test = pd.read_csv(os.path.join(test_data_path, 'testdata.csv'))
+        X_test = df_test[["lastmonth_activity", "lastyear_activity", "number_of_employees"]]
+        y_test = df_test["exited"]
+        
+        logging.info('Load the trained model.')
+        model = pickle.load(open(os.path.join(output_model_path, 'trainedmodel.pkl'),'rb'))
+        
+        logging.info("Predict the trained model with test data.")
+        y_pred = model.predict(X_test)
+        score = f1_score(y_test, y_pred)
+        logging.info("The F1 Score = {}".format(score))
+        
+        logging.info("Save the F1 Score to file.")
+        log_time = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+        with open(os.path.join(output_model_path, 'latestscore.txt'), 'w') as file:
+            file.write("Test time: {}\n".format(log_time))
+            file.write("Model version: {}\n".format(str(os.path.join(output_model_path, 'trainedmodel.pkl'))))
+            file.write("Data test: {}\n".format(os.path.join(test_data_path, 'testdata.csv')))
+            file.write("The F1 Score = {}\n".format(score))
+            file.write("________________________________________________________________")
+    except Exception as e:
+        logging.error("Error in scoring model: ", e)
+    
+if __name__ == '__main__':
+    score_model()    
