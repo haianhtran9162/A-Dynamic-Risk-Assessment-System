@@ -1,5 +1,5 @@
-Ingestion time: 29/09/2023 00:37:57
-List input file: ['data/practicedata/dataset2.csv', 'data/practicedata/dataset1.csv']
+Ingestion time: 29/09/2023 03:18:43
+List input file: ['data/sourcedata/dataset3.csv', 'data/sourcedata/dataset4.csv']
 Output file: data/ingesteddata/finaldata.csv
 Output file shape: (26, 5)
 ________________________________________________________________
