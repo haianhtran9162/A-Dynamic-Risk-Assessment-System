@@ -1,4 +1,4 @@
-Test time: 29/09/2023 03:18:40
+Test time: 29/09/2023 03:53:19
 Model version: model/models/trainedmodel.pkl
 Data test: data/testdata/testdata.csv
 The F1 Score = 0.8571428571428571
