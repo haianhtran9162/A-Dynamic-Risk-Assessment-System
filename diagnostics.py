@@ -21,22 +21,18 @@ output_folder_path = config['output_folder_path']
 def model_predictions():
     """
         Function read production model, data test and calulate predictions
-        Return: the y predictions (float)
+        Return: the y predictions (list of predictions)
     """
-    try:
-        logging.info("Reading data test")
-        df_test = pd.read_csv(os.path.join(test_data_path, 'testdata.csv'))
-        X_test = df_test[["lastmonth_activity", "lastyear_activity", "number_of_employees"]]
-        
-        logging.info("Load the production model")
-        model = pickle.load(open(os.path.join(output_model_path, 'trainedmodel.pkl'),'rb'))
-        
-        logging.info("Predict the data test")
-        y_pred = model.predict(X_test)
-        return y_pred
-    except Exception as e:
-        logging.error("Error in model_predictions function: ", e)
-        return None
+    logging.info("Reading data test")
+    df_test = pd.read_csv(os.path.join(test_data_path, 'testdata.csv'))
+    X_test = df_test[["lastmonth_activity", "lastyear_activity", "number_of_employees"]]
+    
+    logging.info("Load the production model")
+    model = pickle.load(open(os.path.join(output_model_path, 'trainedmodel.pkl'),'rb'))
+    
+    logging.info("Predict the data test")
+    y_pred = model.predict(X_test)
+    return y_pred
 
 def dataframe_summary():
     """
@@ -45,30 +41,26 @@ def dataframe_summary():
             list value of mean, median, standard deviation (list)
             dict value of Nan value in dataset (dict)
     """
-    try:
-        logging.info("Load the ingestion data")
-        df = pd.read_csv(os.path.join(output_folder_path, 'finaldata.csv'))
-        X = df[["lastmonth_activity", "lastyear_activity", "number_of_employees"]]
-        logging.info("Calculating the mean, median and standard deviation scores")
-        mean = X.mean()
-        median = X.median()
-        std = X.std()
-        summary_statistics = []
-        for col in X.columns:
-            summary_statistics.append({
-                col : {
-                    "mean_value": mean[col],
-                    "median_value": median[col],
-                    "std": std[col]
-                }
-            })
-        logging.info("Calculating the missing data value percentage")
-        total_missing = df.isna().sum()
-        precentage_missing = total_missing/df.shape[0]
-        return summary_statistics, precentage_missing.to_dict()
-    except Exception as e:
-        logging.error("Error in dataframe_summary function: ", e)
-        return None
+    logging.info("Load the ingestion data")
+    df = pd.read_csv(os.path.join(output_folder_path, 'finaldata.csv'))
+    X = df[["lastmonth_activity", "lastyear_activity", "number_of_employees"]]
+    logging.info("Calculating the mean, median and standard deviation scores")
+    mean = X.mean()
+    median = X.median()
+    std = X.std()
+    summary_statistics = []
+    for col in X.columns:
+        summary_statistics.append({
+            col : {
+                "mean_value": mean[col],
+                "median_value": median[col],
+                "std": std[col]
+            }
+        })
+    logging.info("Calculating the missing data value percentage")
+    total_missing = df.isna().sum()
+    precentage_missing = total_missing/df.shape[0]
+    return summary_statistics, precentage_missing.to_dict()
 
 def execution_time():
     """
@@ -76,40 +68,32 @@ def execution_time():
         Return:
             a list of 2 timing values in seconds (list)
     """
-    try:
-        logging.info("Calculate timing of ingestion.py")
-        start_time = timeit.default_timer()
-        os.system('python3 ingestion.py')
-        ingestion_time = timeit.default_timer() - start_time
-        
-        logging.info("Calculate timing of traning.py")
-        start_time = timeit.default_timer()
-        os.system('python3 training.py')
-        training_time = timeit.default_timer() - start_time
-        
-        return [ingestion_time, training_time]
-    except Exception as e:
-        logging.error("Error in execution_time function: ", e)
-        return None
+    logging.info("Calculate timing of ingestion.py")
+    start_time = timeit.default_timer()
+    os.system('python3 ingestion.py')
+    ingestion_time = timeit.default_timer() - start_time
+    
+    logging.info("Calculate timing of traning.py")
+    start_time = timeit.default_timer()
+    os.system('python3 training.py')
+    training_time = timeit.default_timer() - start_time
+    
+    return [ingestion_time, training_time]
     
 def outdated_packages_list():
     """
         Get the list of outdated packages from the pip installation 
     """
-    try:
-        logging.info("Get the list of outdated packages from the pip installation")
-        outdate_list = subprocess.run(['pip', 'list', '--outdated'], stdout=subprocess.PIPE, text=True)
-        outdated_packages = []
-        for line in outdate_list.stdout.split('\n')[2:-1]:
-            outdated_packages.append({
-                "package" : line.split()[0],
-                "current_version" : line.split()[1],
-                'latest_version' : line.split()[2]
-            })
-        return outdated_packages
-    except Exception as e:
-        logging.error("Error in outdated_packages_list function: ", e)
-        return None
+    logging.info("Get the list of outdated packages from the pip installation")
+    outdate_list = subprocess.run(['pip', 'list', '--outdated'], stdout=subprocess.PIPE, text=True)
+    outdated_packages = []
+    for line in outdate_list.stdout.split('\n')[2:-1]:
+        outdated_packages.append({
+            "package" : line.split()[0],
+            "current_version" : line.split()[1],
+            'latest_version' : line.split()[2]
+        })
+    return outdated_packages
 
 if __name__ == '__main__':
     print("Make predictions for an input dataset using the current deployed model:")
